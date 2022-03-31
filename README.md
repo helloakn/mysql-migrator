@@ -35,7 +35,7 @@ const migrationsPath = __dirname+"/databases";
 
 mysqlMigrator.init(dbConfig,migrationsPath);
 ```
-
+## Table Migration
 ### create migration file
 ```shell
 node migrator.js migration create create_table_user
@@ -71,7 +71,7 @@ node migrator.js migration up
 ```shell
 node migrator.js migration rollback
 ```
-
+## Data Seeding 
 ### create seeding file
 ```shell
 node migrator.js seeding create user_data_seeding
