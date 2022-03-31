@@ -1,6 +1,6 @@
 {
   "name": "mysql-migrator",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "npm data migration and data seeding package for mysql, mariadb",
   "main": "index.js",
   "scripts": {

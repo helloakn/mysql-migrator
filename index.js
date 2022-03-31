@@ -1,18 +1,36 @@
+const { log } = require('console');
 var fs = require('fs');
 
 const mysql = require("mysql");
-const { resolve } = require('path');
 const { exit } = require('process');
 
-// Create a connection to the database
-// const _dbConfig = {
-//     host: DatabaseConfig.HOST,
-//     user: DatabaseConfig.USER,
-//     port: DatabaseConfig.PORT,
-//     password: DatabaseConfig.PASSWORD,
-//     database: DatabaseConfig.DB_NAME
-// };
+const colors ={
+    "Reset" : "\x1b[0m",
+    "Bright" : "\x1b[1m",
+    "Dim" : "\x1b[2m",
+    "Underscore" : "\x1b[4m",
+    "Blink" : "\x1b[5m",
+    "Reverse" : "\x1b[7m",
+    "Hidden" : "\x1b[8m",
 
+    "FgBlack" : "\x1b[30m",
+    "FgRed" : "\x1b[31m",
+    "FgGreen" : "\x1b[32m",
+    "FgYellow" : "\x1b[33m",
+    "FgBlue" : "\x1b[34m",
+    "FgMagenta" : "\x1b[35m",
+    "FgCyan" : "\x1b[36m",
+    "FgWhite" : "\x1b[37m",
+
+    "BgBlack" : "\x1b[40m",
+    "BgRed" : "\x1b[41m",
+    "BgGreen" : "\x1b[42m",
+    "BgYellow" : "\x1b[43m",
+    "BgBlue" : "\x1b[44m",
+    "BgMagenta" : "\x1b[45m",
+    "BgCyan" : "\x1b[46m",
+    "BgWhite" : "\x1b[47m"
+}
 const migration = {
     create : async (_dir,_fileName)=>{
         //sample -> create('database/migrations','create_table_customer')
@@ -95,6 +113,7 @@ const migration = {
                             let queryInsert = `INSERT INTO migrations VALUES(NULL,'${x}','${Date.now()}',${batchNo})`;
                            // console.log('queryInsert',queryInsert);
                             let resInsert = await _callBack(queryInsert);
+                            console.log(colors.FgGreen,"UP Function : " + x);
                            // console.log('resInsert',resInsert);
                         }
                         return upResult;
@@ -110,6 +129,38 @@ const migration = {
         });
             
         return await Promise.all(dump).then(value=>{return value;});
+    },
+    rollback : async (_dir,_callBack)=>{
+        let dump = await new Promise(async (resolve, reject) =>{
+            console.log(colors.FgMagenta,"I'm running rollback functions.");
+            let queryString = `SELECT * FROM migrations WHERE batch=(SELECT max(batch) FROM migrations)`;
+            let res = await _callBack(queryString);
+            if(res.length==0){ 
+                console.log(colors.FgYellow,"There is nothing to rollback");
+                resolve('there is nothing to rollback');
+            }
+            console.log(colors.FgBlue,`Running on Batch : ${res[0].batch}`);
+            let tmpResult = res.map(async (x)=>{
+                
+                let filePath = (_dir + "/" + x.name +".js").replace("//","/");
+                
+                try{
+                    let jsonObj = require(filePath);
+                    let resRollBack = await _callBack(jsonObj.rollback);
+                    resRollBack = await _callBack(`DELETE FROM migrations WHERE id=${x.id}`);
+                    console.log(colors.FgGreen,`Successfully RollBack`,colors.FgYellow,` :  ${x.name}.js`);
+                    return "finished";
+                }
+                catch(err){
+                    console.log(colors.FgRed,`Please check your rollback function on ${x.name}.js`);
+                    throw err;
+                    return(err);
+                }
+                
+            });
+            resolve(tmpResult);
+        });
+        return await Promise.all(dump).then(value=>{return value;});
     }
 
 }
@@ -119,14 +170,14 @@ class MySqlMigrator{
 
     }
     /*
-    migrate:migration create tablename
-    migrate:migration up
-    migrate:migration down
-    migrate:migration refresh
-    migrate:migration reset
-    migrate:seeder create seeder
-    migrate:seeder up
-    migrate:seeder down
+    migration create tablename
+    migration up
+    migration down
+    migration refresh
+    migration reset
+    seeder create seeder
+    seeder up
+    seeder down
     */
     executeQuery = async (_query,dbConnection=this.dbConnection) => {
         return new Promise((resolve,reject) => {
@@ -159,21 +210,26 @@ class MySqlMigrator{
         if (!fs.existsSync(_dbPath+'/seedings')){
             fs.mkdirSync(_dbPath+'/seedings');
         }
+        let response = null;
         if(process.argv.length>2){
            switch(process.argv[2]){
-            case "migrate:migration":
+            case "migration":
                 if(process.argv.length>3){
                     switch(process.argv[3]){
                         case "create" :
                             if(process.argv.length>4){
-                                let response = await migration.create(_dbPath+"/migrations",process.argv[4]); 
+                                response = await migration.create(_dbPath+"/migrations",process.argv[4]); 
                                 process.exit();
                             }
                         break;
 
                         case "up" :
-                            let response = await migration.up(_dbPath+"/migrations",this.executeQuery);
-                            
+                            response = await migration.up(_dbPath+"/migrations",this.executeQuery);
+                            process.exit();
+                        break;
+
+                        case "rollback" :
+                            response = await migration.rollback(_dbPath+"/migrations",this.executeQuery);
                             process.exit();
                            
                         break;

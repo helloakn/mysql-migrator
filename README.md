@@ -32,7 +32,7 @@ mysqlMigrator.init(dbConfig,migrationsPath);
 ```
 ### create migration file
 ```shell
-node migrator.js migrate:migration create create_table_customer
+node migrator.js migration create create_table_user
 ```
 ### code sample for table migration file
 there are two function **up** and **rollback** functions.
@@ -59,10 +59,10 @@ module.exports = {
 ### run migration file
 #### up
 ```shell
-node migrator.js migrate:migration up
+node migrator.js migration up
 ```
 #### rollback
 ```shell
-node migrator.js migrate:migration rollback
+node migrator.js migration rollback
 ```
 
