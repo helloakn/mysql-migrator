@@ -4,16 +4,18 @@ npm migration package for mysql, mariadb
 ## Table Of contents
 - Installation 
 - Setup
-- create migration 
-- code sample for table migration file
-- run migration file
--   - up
--   - rollback
-- create seeding 
-- code sample for data seeding file
-- run seeding file
--   - up
--   - rollback
+- Table Migration
+	- create migration 
+	- code sample for table migration file
+	- run migration file
+		- up
+		- rollback
+- Data Seeding
+	- create seeding 
+	- code sample for data seeding file
+	- run seeding file
+		- up
+		- rollback
 
 ### Installation
 ```shell
