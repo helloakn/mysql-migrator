@@ -2,10 +2,10 @@ const {mysqlMigrator} = require('mysql-migrator');
 
 const dbConfig = {
   host: 'localhost',
-  user: 'xxxxxx',
+  user: 'haha',
   port: 3306,
-  password: 'xxxxxx',
-  database: 'xxxxxx'
+  password: 'aknakn0091',
+  database: 'ShweMart'
 }
 const migrationsPath = __dirname+"/databases";
 

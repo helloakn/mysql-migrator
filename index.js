@@ -238,7 +238,14 @@ const seeding = {
                     let jsonObj = require(filePath.replace(' ',''));
                     //console.log(jsonObj.up);
                     try{
-                        let upResult = await _callBack(jsonObj.up);
+                        let upResult = null;
+                        if(jsonObj.up instanceof Function){
+                            upResult = await _callBack(jsonObj.up());
+                        }
+                        else{
+                            upResult = await _callBack(jsonObj.up);
+                        }
+                        //let upResult = await _callBack(jsonObj.up);
                         if(!upResult){
                             console.error("please check ur up function in file "+filePath );
                         }
@@ -279,7 +286,11 @@ const seeding = {
                 
                 try{
                     let jsonObj = require(filePath);
-                    let resRollBack = await _callBack(jsonObj.rollback);
+                    if(jsonObj.up instanceof Function){
+                    
+                    }
+                    let resRollBack = await _callBack((jsonObj.rollback instanceof Function)?jsonObj.rollback():jsonObj.rollback);
+                    //let resRollBack = await _callBack(jsonObj.rollback);
                     resRollBack = await _callBack(`DELETE FROM seedings WHERE id=${x.id}`);
                     console.log(colors.FgGreen,`Successfully RollBack`,colors.FgYellow,` :  ${x.name}.js`);
                     return "finished";
