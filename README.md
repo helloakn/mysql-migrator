@@ -35,9 +35,9 @@ mysqlMigrator.init(dbConfig,migrationsPath);
 node migrator.js migrate:migration create create_table_customer
 ```
 ### code sample for table migration file
-there are two function **up** and **down** functions.
+there are two function **up** and **rollback** functions.
 - **up** is for upgrading
-- **down** is for downgrading. to use this function when you need to roll back to previous batch.
+- **rollback** is for downgrading. to use this function when you need to roll back to previous batch.
  ```shell
 //write sql statement to create or modify
 module.exports = {
