@@ -5,13 +5,13 @@ const { resolve } = require('path');
 const { exit } = require('process');
 
 // Create a connection to the database
-const _dbConfig = {
-    host: DatabaseConfig.HOST,
-    user: DatabaseConfig.USER,
-    port: DatabaseConfig.PORT,
-    password: DatabaseConfig.PASSWORD,
-    database: DatabaseConfig.DB_NAME
-};
+// const _dbConfig = {
+//     host: DatabaseConfig.HOST,
+//     user: DatabaseConfig.USER,
+//     port: DatabaseConfig.PORT,
+//     password: DatabaseConfig.PASSWORD,
+//     database: DatabaseConfig.DB_NAME
+// };
 
 const migration = {
     create : async (_dir,_fileName)=>{
@@ -51,7 +51,7 @@ const migration = {
         let status = await _callBack(cmdString);
 
         _dir = (_dir + "/").replace("//","/");
-
+       // console.log ('_dir',_dir);
         let readDir = await new Promise((resolve) => {
             fs.readdir(_dir, (err, files) => {
                 if(err){
@@ -70,6 +70,7 @@ const migration = {
             });
         });
 
+       //console.log('readDir',readDir);
         let batchNo = 1;
         let dump = await new Promise(async (resolve, reject) =>{
             let queryBath = `SELECT IFNULL(max(batch),0) as bathNo FROM migrations`;
@@ -78,25 +79,23 @@ const migration = {
             let checkResults = readDir.map(async x=>{
                 //
                 
-                console.log('resBath',batchNo);
                 let queryString = `SELECT * FROM migrations where name='${x}'`;
                 let res = await _callBack(queryString);
-                console.log('res',res)
                 if(res == false){
-                    let filePath = "../"+_dir+x+".js";
-                    let jsonObj = require(filePath);
-                    //console.logjsonObj.up();
+                    let filePath = `${_dir}${x}.js`;
+                    //console.log('filePath',filePath);
+                    let jsonObj = require(filePath.replace(' ',''));
+                    //console.log(jsonObj.up);
                     try{
                         let upResult = await _callBack(jsonObj.up);
-                        console.log('upResult',upResult);
                         if(!upResult){
                             console.error("please check ur up function in file "+filePath );
                         }
                         else{
                             let queryInsert = `INSERT INTO migrations VALUES(NULL,'${x}','${Date.now()}',${batchNo})`;
-                            console.log('queryInsert',queryInsert);
+                           // console.log('queryInsert',queryInsert);
                             let resInsert = await _callBack(queryInsert);
-                            console.log('resInsert',resInsert);
+                           // console.log('resInsert',resInsert);
                         }
                         return upResult;
                     }
@@ -104,11 +103,8 @@ const migration = {
                         throw err;
                         return err;
                     }
-                    
                 }
                 return res; 
-
-
             })
             resolve(checkResults);
         });
@@ -118,7 +114,7 @@ const migration = {
 
 }
 
-class Database{
+class MySqlMigrator{
     constructor(){
 
     }
@@ -133,13 +129,9 @@ class Database{
     migrate:seeder down
     */
     executeQuery = async (_query,dbConnection=this.dbConnection) => {
-        console.log('=>',_query);
         return new Promise((resolve,reject) => {
-            console.log('---');
-            
             try{
                 dbConnection.query(_query, (err, res) => {
-                    
                   if (err) {
                       resolve(false);
                       return;
@@ -151,17 +143,21 @@ class Database{
                // throw err;
                 resolve(false)
             }
-            
-
-          });// end Promise
+        });// end Promise
     }//end getRecordById function
 
-    init= async (_dbPath="./database")=>{
+    init= async (_dbConfig,_dbPath="./database")=>{
         this.dbConfig = _dbConfig;
         this.dbConnection = await this.connect();
-
+        
         if (!fs.existsSync(_dbPath)){
             fs.mkdirSync(_dbPath);
+        }
+        if (!fs.existsSync(_dbPath+'/migrations')){
+            fs.mkdirSync(_dbPath+'/migrations');
+        }
+        if (!fs.existsSync(_dbPath+'/seedings')){
+            fs.mkdirSync(_dbPath+'/seedings');
         }
         if(process.argv.length>2){
            switch(process.argv[2]){
@@ -171,14 +167,13 @@ class Database{
                         case "create" :
                             if(process.argv.length>4){
                                 let response = await migration.create(_dbPath+"/migrations",process.argv[4]); 
-                                console.log(response);
-                               
+                                process.exit();
                             }
                         break;
 
                         case "up" :
                             let response = await migration.up(_dbPath+"/migrations",this.executeQuery);
-                            console.log('response',response);
+                            
                             process.exit();
                            
                         break;
@@ -216,4 +211,4 @@ class Database{
 }
 
 
-exports.mysqlMigrator = new Database();
+exports.mysqlMigrator = new MySqlMigrator();

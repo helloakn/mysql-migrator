@@ -1,6 +1,6 @@
 {
   "name": "mysql-migrator",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "npm data migration and data seeding package for mysql, mariadb",
   "main": "index.js",
   "scripts": {
@@ -21,16 +21,7 @@
   "author": "Aung Kyaw Nyunt",
   "license": "MIT",
   "dependencies": {
-    "cors": "^2.8.5",
-    "crypto": "^1.0.1",
-    "dotenv": "^16.0.0",
-    "express": "^4.17.3",
-    "jsonwebtoken": "^8.5.1",
-    "mysql": "^2.18.1",
-    "mysql-migrations": "^1.0.7"
-  },
-  "exports": {
-    "./database": "./db.js"
+    "mysql": "^2.18.1"
   },
   "bugs": {
     "url": "https://github.com/helloakn/mysql-migrator/issues"

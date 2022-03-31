@@ -26,7 +26,7 @@ const dbConfig = {
   password: '******',
   database: 'your-database-name'
 }
-const migrationsPath = "./databases";
+const migrationsPath = __dirname+"/databases";
 
 mysqlMigrator.init(dbConfig,migrationsPath);
 ```

@@ -1,4 +1,0 @@
-migrations/*
-node_modules/*
-test/mysql.js
-migration.js
