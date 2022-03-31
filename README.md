@@ -8,7 +8,12 @@ npm migration package for mysql, mariadb
 - code sample for table migration file
 - run migration file
 -   - up
--   - down
+-   - rollback
+- create seeding 
+- code sample for data seeding file
+- run seeding file
+-   - up
+-   - rollback
 
 ### Installation
 ```shell
@@ -30,6 +35,7 @@ const migrationsPath = __dirname+"/databases";
 
 mysqlMigrator.init(dbConfig,migrationsPath);
 ```
+
 ### create migration file
 ```shell
 node migrator.js migration create create_table_user
@@ -64,5 +70,34 @@ node migrator.js migration up
 #### rollback
 ```shell
 node migrator.js migration rollback
+```
+
+### create seeding file
+```shell
+node migrator.js seeding create user_data_seeding
+```
+### code sample for data seeding file
+there are two function **up** and **rollback** functions.
+- **up** is for upgrading
+- **rollback** is for downgrading. to use this function when you need to roll back to previous batch.
+ ```javascript
+//write sql statement to create or modify
+module.exports = {
+	"up": `
+	INSERT INTO User VALUES(NULL,"AKN","xxxxxx","2/1/22","2/1/22",NULL);
+	`,
+	"rollback":`
+	TRUNCATE TABLE User;
+	`
+}
+```
+### run seeding file
+#### up
+```shell
+node migrator.js seeding up
+```
+#### rollback
+```shell
+node migrator.js seeding rollback
 ```
 
