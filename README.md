@@ -1,3 +1,5 @@
+<div id="top"></div> 
+
 # mysql-migrator
 npm migration package for mysql, mariadb
 
@@ -37,6 +39,10 @@ const migrationsPath = __dirname+"/databases";
 
 mysqlMigrator.init(dbConfig,migrationsPath);
 ```
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+
 ## Table Migration
 ### create migration file
 ```shell
@@ -73,6 +79,10 @@ node migrator.js migration up
 ```shell
 node migrator.js migration rollback
 ```
+
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+
 ## Data Seeding 
 ### create seeding file
 ```shell
@@ -118,3 +128,6 @@ node migrator.js seeding up
 node migrator.js seeding rollback
 ```
 
+<p align="right">(<a href="#top">back to top</a>)</p>
+
+Thank You for Visiting to my repo. :)
