@@ -110,7 +110,7 @@ module.exports = {
 	"up": function(_callBack){
 		let query = `INSERT INTO User VALUES(NULL,"AKN","xxxxxx","2/1/22","2/1/22",NULL);`;
 		return await new Promise(async (resolve,reject)=>{
-			resolve(_callBack(query));
+			resolve( await _callBack(query));
 		}); ;
 	},
 	"rollback":function(){
