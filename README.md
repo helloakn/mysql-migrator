@@ -107,9 +107,11 @@ or
  ```javascript
 //write sql statement to create or modify
 module.exports = {
-	"up": function(){
+	"up": function(_callBack){
 		let query = `INSERT INTO User VALUES(NULL,"AKN","xxxxxx","2/1/22","2/1/22",NULL);`;
-		return query;
+		return await new Promise(async (resolve,reject)=>{
+			resolve(_callBack(query));
+		}); ;
 	},
 	"rollback":function(){
 		let query = `TRUNCATE TABLE User;`;
