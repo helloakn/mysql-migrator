@@ -31,6 +31,7 @@ const colors ={
     "BgCyan" : "\x1b[46m",
     "BgWhite" : "\x1b[47m"
 }
+
 const migration = {
     create : async (_dir,_fileName)=>{
         //sample -> create('database/migrations','create_table_customer')
@@ -240,7 +241,8 @@ const seeding = {
                     try{
                         let upResult = null;
                         if(jsonObj.up instanceof Function){
-                            upResult = await _callBack(jsonObj.up());
+                            //upResult = await _callBack(jsonObj.up());
+                            upResult = await jsonObj.up(await _callBack );
                         }
                         else{
                             upResult = await _callBack(jsonObj.up);
