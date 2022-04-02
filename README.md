@@ -109,7 +109,7 @@ or
  ```javascript
 //write sql statement to create or modify
 module.exports = {
-	"up": function(_callBack){
+	"up": async function(_callBack){
 		let query = `INSERT INTO User VALUES(NULL,"AKN","xxxxxx","2/1/22","2/1/22",NULL);`;
 		return await new Promise(async (resolve,reject)=>{
 			resolve( await _callBack(query));
