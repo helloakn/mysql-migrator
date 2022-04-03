@@ -242,12 +242,17 @@ const seeding = {
                         let upResult = null;
                         if(jsonObj.up instanceof Function){
                             //upResult = await _callBack(jsonObj.up());
-                            upResult = await jsonObj.up(await _callBack );
+                            //upResult = await jsonObj.up(await _callBack );
+                            upResult = await new Promise(async (tmpResolve)=>{
+                                tmpResolve(await jsonObj.up(await _callBack ));
+                            });
                         }
                         else{
                             upResult = await _callBack(jsonObj.up);
                         }
                         //let upResult = await _callBack(jsonObj.up);
+                       
+
                         if(!upResult){
                             console.error("please check ur up function in file "+filePath );
                         }
@@ -267,7 +272,8 @@ const seeding = {
                 }
                 return res; 
             })
-            resolve(checkResults);
+            
+            resolve(await Promise.all(checkResults).then(value=>{return value;}));
         });
             
         return await Promise.all(dump).then(value=>{return value;});
