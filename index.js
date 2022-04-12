@@ -41,8 +41,8 @@ const migration = {
         let tmpFile = (_dir + "/" + (Date.now() / 1000 | 0) +"_"+ _fileName + '.js').replace('//','/');
         return new Promise(resolve => {
             fs.writeFile(
-                tmpFile, 
-                "//write sql statement to create or modify\nmodule.exports = {\n\t\"up\": \"\",\n\t\"rollback\":\"\"\n}", 
+                tmpFile,
+                "//write sql statement to create or modify\nmodule.exports = {\n\t\"up\": \"\",\n\t\"rollback\":\"\"\n}",
                 function (err) {
                     if (err) {
                         throw err;
@@ -51,7 +51,7 @@ const migration = {
                     else{
                         resolve('File is created successfully.');
                     }
-                    
+
                 }
             );
         });
@@ -97,7 +97,7 @@ const migration = {
             batchNo += resBath[0].bathNo;
             let checkResults = readDir.map(async x=>{
                 //
-                
+
                 let queryString = `SELECT * FROM migrations where name='${x}'`;
                 let res = await _callBack(queryString);
                 if(res == false){
@@ -106,7 +106,18 @@ const migration = {
                     let jsonObj = require(filePath.replace(' ',''));
                     //console.log(jsonObj.up);
                     try{
-                        let upResult = await _callBack(jsonObj.up);
+                        let upResult = null;///await _callBack(jsonObj.up);
+                        if(jsonObj.up instanceof Function){
+                            //upResult = await _callBack(jsonObj.up());
+                            //upResult = await jsonObj.up(await _callBack );
+                            upResult = await new Promise(async (tmpResolve)=>{
+                                tmpResolve(await jsonObj.up(await _callBack ));
+                            });
+                        }
+                        else{
+                            upResult = await _callBack(jsonObj.up);
+                        }
+
                         if(!upResult){
                             console.error("please check ur up function in file "+filePath );
                         }
@@ -124,11 +135,11 @@ const migration = {
                         return err;
                     }
                 }
-                return res; 
+                return res;
             })
             resolve(checkResults);
         });
-            
+
         return await Promise.all(dump).then(value=>{return value;});
     },
     rollback : async (_dir,_callBack)=>{
@@ -136,15 +147,15 @@ const migration = {
             console.log(colors.FgMagenta,"I'm running rollback functions.");
             let queryString = `SELECT * FROM migrations WHERE batch=(SELECT max(batch) FROM migrations)`;
             let res = await _callBack(queryString);
-            if(res.length==0){ 
+            if(res.length==0){
                 console.log(colors.FgYellow,"There is nothing to rollback");
                 resolve('there is nothing to rollback');
             }
             console.log(colors.FgBlue,`Running on Batch : ${res[0].batch}`);
             let tmpResult = res.map(async (x)=>{
-                
+
                 let filePath = (_dir + "/" + x.name +".js").replace("//","/");
-                
+
                 try{
                     let jsonObj = require(filePath);
                     let resRollBack = await _callBack(jsonObj.rollback);
@@ -157,7 +168,7 @@ const migration = {
                     throw err;
                     return(err);
                 }
-                
+
             });
             resolve(tmpResult);
         });
@@ -174,8 +185,8 @@ const seeding = {
         let tmpFile = (_dir + "/" + (Date.now() / 1000 | 0) +"_"+ _fileName + '.js').replace('//','/');
         return new Promise(resolve => {
             fs.writeFile(
-                tmpFile, 
-                "//write sql statement to create or modify\nmodule.exports = {\n\t\"up\": \"\",\n\t\"rollback\":\"\"\n}", 
+                tmpFile,
+                "//write sql statement to create or modify\nmodule.exports = {\n\t\"up\": \"\",\n\t\"rollback\":\"\"\n}",
                 function (err) {
                     if (err) {
                         throw err;
@@ -184,7 +195,7 @@ const seeding = {
                     else{
                         resolve('File is created successfully.');
                     }
-                    
+
                 }
             );
         });
@@ -230,7 +241,7 @@ const seeding = {
             batchNo += resBath[0].bathNo;
             let checkResults = readDir.map(async x=>{
                 //
-                
+
                 let queryString = `SELECT * FROM seedings where name='${x}'`;
                 let res = await _callBack(queryString);
                 if(res == false){
@@ -251,7 +262,7 @@ const seeding = {
                             upResult = await _callBack(jsonObj.up);
                         }
                         //let upResult = await _callBack(jsonObj.up);
-                       
+
 
                         if(!upResult){
                             console.error("please check ur up function in file "+filePath );
@@ -270,12 +281,12 @@ const seeding = {
                         return err;
                     }
                 }
-                return res; 
+                return res;
             })
-            
+
             resolve(await Promise.all(checkResults).then(value=>{return value;}));
         });
-            
+
         return await Promise.all(dump).then(value=>{return value;});
     },
     rollback : async (_dir,_callBack)=>{
@@ -283,19 +294,19 @@ const seeding = {
             console.log(colors.FgMagenta,"I'm running rollback functions.");
             let queryString = `SELECT * FROM seedings WHERE batch=(SELECT max(batch) FROM seedings)`;
             let res = await _callBack(queryString);
-            if(res.length==0){ 
+            if(res.length==0){
                 console.log(colors.FgYellow,"There is nothing to rollback");
                 resolve('there is nothing to rollback');
             }
             console.log(colors.FgBlue,`Running on Batch : ${res[0].batch}`);
             let tmpResult = res.map(async (x)=>{
-                
+
                 let filePath = (_dir + "/" + x.name +".js").replace("//","/");
-                
+
                 try{
                     let jsonObj = require(filePath);
                     if(jsonObj.up instanceof Function){
-                    
+
                     }
                     let resRollBack = await _callBack((jsonObj.rollback instanceof Function)?jsonObj.rollback():jsonObj.rollback);
                     //let resRollBack = await _callBack(jsonObj.rollback);
@@ -308,7 +319,7 @@ const seeding = {
                     throw err;
                     return(err);
                 }
-                
+
             });
             resolve(tmpResult);
         });
@@ -352,7 +363,7 @@ class MySqlMigrator{
     init= async (_dbConfig,_dbPath="./database")=>{
         this.dbConfig = _dbConfig;
         this.dbConnection = await this.connect();
-        
+
         if (!fs.existsSync(_dbPath)){
             fs.mkdirSync(_dbPath);
         }
@@ -370,7 +381,7 @@ class MySqlMigrator{
                     switch(process.argv[3]){
                         case "create" :
                             if(process.argv.length>4){
-                                response = await migration.create(_dbPath+"/migrations",process.argv[4]); 
+                                response = await migration.create(_dbPath+"/migrations",process.argv[4]);
                                 process.exit();
                             }
                         break;
@@ -383,7 +394,7 @@ class MySqlMigrator{
                         case "rollback" :
                             response = await migration.rollback(_dbPath+"/migrations",this.executeQuery);
                             process.exit();
-                           
+
                         break;
                     }
                 }
@@ -393,7 +404,7 @@ class MySqlMigrator{
                     switch(process.argv[3]){
                         case "create" :
                             if(process.argv.length>4){
-                                response = await seeding.create(_dbPath+"/seedings",process.argv[4]); 
+                                response = await seeding.create(_dbPath+"/seedings",process.argv[4]);
                                 process.exit();
                             }
                         break;
@@ -406,7 +417,7 @@ class MySqlMigrator{
                         case "rollback" :
                             response = await seeding.rollback(_dbPath+"/seedings",this.executeQuery);
                             process.exit();
-                            
+
                         break;
                     }
                 }
