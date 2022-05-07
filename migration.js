@@ -1,35 +1,55 @@
 const fs = require('fs')
 const path = require('path')
 const { Table } = require('./table.js')
-module.exports.Migration = async (_sqlConnection, _dir) => {
+module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir) => {
+  const table = Table(_sqlConnection, _executeQuery)
+
   const up = async () => {
-    const migrationFilePath = path.join(_dir, '/migrations/2-1651905393397-hehahahaha.js')
-    const { up: migrationUp } = require(migrationFilePath)
-    const xx = await migrationUp(Table(_sqlConnection))
-    return xx
+    const migrationList = await table.executeRawQuery('SELECT name from migrations')
+    const fileList = await _readDir(path.join(_dir, '/migrations/'))
+    console.log('fileList',fileList)
+    let count = 0
+    let promiseList = []
+    fileList.forEach(async migrationFile => {
+      const tf = migrationList.find(x => x.name === migrationFile)
+      console.log('tf yyyyy',tf)
+      if (!tf) {
+        count++
+        console.log('!tf')
+        const migrationFilePath = path.join(_dir, '/migrations/', migrationFile)
+        const { up: migrationUp } = require(migrationFilePath)
+        //const xx = new Promise(resolve => {
+        let tmp = migrationUp(table)
+        promiseList.push(tmp)
+         // resolve(migres)
+       // })
+      }
+
+    })
+    if (count === 0) {
+      return { type: 'warning', message: 'Nothing to migrate' }
+    } else {
+      console.log('count xxxxx',count)
+      console.log('promiseList',promiseList)
+      let pa = await Promise.all(promiseList).then(value=>{
+        console.log('promisessall value')
+        return value
+      })
+      console.log('pa',pa)
+      return { type: 'success', message: '\n Successfully migrated.' }
+    }
+    // const migrationFilePath = path.join(_dir, '/migrations/2-1651905393397-hehahahaha.js')
+    // const { up: migrationUp } = require(migrationFilePath)
+    // const xx = await migrationUp(table)
+    // return xx
   }
+
   const rollback = async () => {
     const migrationFilePath = path.join(_dir, '/migrations/2-1651905393397-hehahahaha.js')
     const { rollback: migrationDown } = require(migrationFilePath)
-    const xx = await migrationDown(Table(_sqlConnection))
+    const xx = await migrationDown(table)
     return xx
   }
-
-  const executeQuery = async (_connection, _query) => {
-    return new Promise((resolve) => {
-      try {
-        _connection.query(_query, (err, res) => {
-          if (err) {
-            resolve(false)
-          }
-          resolve(res)
-        })// end sql command
-      } catch (err) {
-        // throw err;
-        resolve(false)
-      }
-    }) // end Promise
-  } // end getRecordById function
 
   const createFile = async (_filename) => {
     const fileCount = await new Promise(resolve => {
@@ -47,7 +67,7 @@ module.exports.Migration = async (_sqlConnection, _dir) => {
       const tmpFile = path.join(__dirname, '/migration.tmp.js')
       fs.copyFile(tmpFile, _filename, (err) => {
         if (err) {
-          console.log('error', err)
+          // console.log('error', err)
           resolve(err)
         } else {
           resolve('success')
@@ -64,15 +84,12 @@ module.exports.Migration = async (_sqlConnection, _dir) => {
     let msg
     let responseMessage
 
-    const query = `
-    CREATE TABLE IF NOT EXISTS migrations (
-        id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-        name varchar(254) NOT NULL,
-        created_at varchar(254) NOT NULL,
-        batch int NOT NULL
-        )
-    `
-    await executeQuery(_sqlConnection, query)
+    await table.create('migrations', {
+      id: 'int NOT NULL PRIMARY KEY AUTO_INCREMENT',
+      name: 'varchar(254) NOT NULL',
+      batch: 'int NOT NULL',
+      created_at: 'varchar(254) NOT NULL'
+    })
 
     const caseStr = process.argv[2]
     switch (caseStr) {
@@ -85,8 +102,7 @@ module.exports.Migration = async (_sqlConnection, _dir) => {
           break
         }
       case 'migration:up':
-        msg = await up()
-        responseMessage = { type: 'success', message: msg }
+        responseMessage = await up()
         break
       case 'migration:rollback':
         msg = await rollback()
@@ -95,7 +111,7 @@ module.exports.Migration = async (_sqlConnection, _dir) => {
       case 'seeding:create':
       case 'seeding:up':
       case 'seeding:rollback':
-        console.log('ok')
+        console.log('seeding')
         break
       default:
         process.exit()

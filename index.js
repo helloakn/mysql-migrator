@@ -47,11 +47,53 @@ const Output = (_msg) => {
   }
 }
 
+const readDir = async (_dir) => {
+  return new Promise(resolve => {
+    fs.readdir(_dir, (err, files) => {
+      if (err) {
+        console.log(err)
+        process.exit()
+      }
+      resolve(files)
+    })
+  })
+}
+
 class Migrator {
   constructor (_config, _dbPath) {
     this.dbConfig = _config
     this.dbPath = _dbPath
   }
+
+  connect = async () => {
+    return new Promise(resolve => {
+      const dbConn = mysql.createConnection(this.dbConfig)
+      dbConn.connect(error => {
+        if (error) {
+          throw error
+        } else {
+          resolve(dbConn)
+        }
+        console.log(colors.FgGreen, 'Successfully connected to the database for migrations.\n', colors.Reset)
+      })
+    })
+  }
+
+  executeQuery = async (_query) => {
+    return new Promise((resolve) => {
+      try {
+        this.dbConnection.query(_query, (err, res) => {
+          if (err) {
+            resolve(false)
+          }
+          resolve(res)
+        })// end sql command
+      } catch (err) {
+        // throw err;
+        resolve(false)
+      }
+    }) // end Promise
+  } // end getRecordById function
 
   init = async () => {
     const simpleCommand = `
@@ -66,13 +108,14 @@ class Migrator {
     `
     this.dbConnection = await this.connect()
     this.createDirs()
+
     if (process.argv.length > 2) {
       const caseStr = process.argv[2]
       switch (caseStr) {
         case 'migration:create':
         case 'migration:up':
         case 'migration:rollback':
-          return await Migration(this.dbConnection, this.dbPath)
+          return await Migration(this.dbConnection, this.dbPath, this.executeQuery, readDir)
         case 'seeding:create':
         case 'seeding:up':
         case 'seeding:rollback':
@@ -97,20 +140,6 @@ class Migrator {
     if (!fs.existsSync(this.dbPath + '/seedings')) {
       fs.mkdirSync(this.dbPath + '/seedings')
     }
-  }
-
-  connect = async () => {
-    return new Promise(resolve => {
-      const dbConn = mysql.createConnection(this.dbConfig)
-      dbConn.connect(error => {
-        if (error) {
-          throw error
-        } else {
-          resolve(dbConn)
-        }
-        console.log(colors.FgGreen, 'Successfully connected to the database for migrations.', colors.Reset)
-      })
-    })
   }
 }
 

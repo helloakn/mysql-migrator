@@ -1,47 +1,41 @@
-/*
-CREATE TABLE IF NOT EXISTS migrations (
-        id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-        name varchar(254) NOT NULL,
-        created_at varchar(254) NOT NULL,
-        batch int NOT NULL
-        )
-*/
-
-module.exports.Table = (_sql) => {
-  const executeQuery = async (_query) => {
-    return new Promise((resolve) => {
-      try {
-        _sql.query(_query, (err, res) => {
-          if (err) {
-            resolve(false)
-          }
-          resolve(res)
-        })
-      } catch (err) {
-        resolve(false)
-      }
-    })
+module.exports.Table = (_sql, _executeQuery) => {
+  const insertData = async (_tblName, _row) => {
   }
 
   const tableCreate = async (_tblName, _columns) => {
-    const columns = []
-    for (const [key, value] of Object.entries(_columns)) {
-      columns.push(` ${key} ${value}`)
-    }
-    const columnsString = `CREATE TABLE IF NOT EXISTS ${_tblName} ( ${columns.join(',')} )`
-    return await executeQuery(columnsString)
+    // console.log('tablecreate')
+    return new Promise(async resolve => {
+      const columns = []
+      for (const [key, value] of Object.entries(_columns)) {
+        columns.push(` ${key} ${value}`)
+      }
+      const rawQuery = `CREATE TABLE IF NOT EXISTS ${_tblName} ( ${columns.join(',')} )`
+      console.log('rawQuery',rawQuery)
+      const result = await _executeQuery(rawQuery)
+      console.log('result',result)
+      resolve(
+        result === false
+        ? 'wrong'
+        : 'success'
+        )
+    })
+    
   }
 
-  const tableDropTable = (_tblName) => {
-    return { tableName: _tblName }
+  const tableDropTable = async (_tblName) => {
+    const columnsString = `DROP TABLE IF EXISTS ${_tblName}`
+    return await _executeQuery(columnsString)
   }
 
   const tableAddColumn = () => {
 
   }
+
   return {
     create: tableCreate,
     dropTable: tableDropTable,
-    addColumn: tableAddColumn
+    addColumn: tableAddColumn,
+    insert: insertData,
+    executeRawQuery: _executeQuery
   }
 }
