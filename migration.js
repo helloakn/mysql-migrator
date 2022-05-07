@@ -3,45 +3,48 @@ const path = require('path')
 const { Table } = require('./table.js')
 module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir) => {
   const table = Table(_sqlConnection, _executeQuery)
+  let batchNumber = 0
 
   const up = async () => {
     const migrationList = await table.executeRawQuery('SELECT name from migrations')
     const fileList = await _readDir(path.join(_dir, '/migrations/'))
-    console.log('fileList',fileList)
+    // console.log('fileList',fileList)
     let count = 0
-    let promiseList = []
+    const promiseList = []
+    const migrationfileList = []
     fileList.forEach(async migrationFile => {
       const tf = migrationList.find(x => x.name === migrationFile)
-      console.log('tf yyyyy',tf)
       if (!tf) {
         count++
-        console.log('!tf')
         const migrationFilePath = path.join(_dir, '/migrations/', migrationFile)
         const { up: migrationUp } = require(migrationFilePath)
-        //const xx = new Promise(resolve => {
-        let tmp = migrationUp(table)
+        const tmp = migrationUp(table)
         promiseList.push(tmp)
-         // resolve(migres)
-       // })
+        migrationfileList.push(migrationFile)
       }
-
     })
     if (count === 0) {
-      return { type: 'warning', message: 'Nothing to migrate' }
+      return { type: 'warning', message: 'Nothing to migrate\n' }
     } else {
-      console.log('count xxxxx',count)
-      console.log('promiseList',promiseList)
-      let pa = await Promise.all(promiseList).then(value=>{
-        console.log('promisessall value')
+      const paList = await Promise.all(promiseList).then(value => {
         return value
       })
-      console.log('pa',pa)
-      return { type: 'success', message: '\n Successfully migrated.' }
+      const insertPromiseList = []
+      paList.forEach((pa, index) => {
+        if (pa !== false) {
+          const insertStatement = `INSERT INTO migrations VALUES(NULL,'${migrationfileList[index]}',${batchNumber},'created')`
+          const insertpl = _executeQuery(insertStatement)
+          insertPromiseList.push(insertpl)
+          console.log('\x1b[32m', migrationfileList[index], '\x1b[36m', ' : migrated successfully ', '\x1b[0m')
+        } else {
+          console.log('\x1b[31m', migrationfileList[index], '\x1b[31m', ' : Failed to migrate ', '\x1b[0m')
+        }
+      })
+      await Promise.all(insertPromiseList).then(value => {
+        return value
+      })
+      return { type: 'success', message: '\n Migration is done\n' }
     }
-    // const migrationFilePath = path.join(_dir, '/migrations/2-1651905393397-hehahahaha.js')
-    // const { up: migrationUp } = require(migrationFilePath)
-    // const xx = await migrationUp(table)
-    // return xx
   }
 
   const rollback = async () => {
@@ -84,13 +87,21 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
     let msg
     let responseMessage
 
-    await table.create('migrations', {
+    const createMigration = table.create('migrations', {
       id: 'int NOT NULL PRIMARY KEY AUTO_INCREMENT',
       name: 'varchar(254) NOT NULL',
       batch: 'int NOT NULL',
       created_at: 'varchar(254) NOT NULL'
     })
 
+    await Promise.all([createMigration]).then(value => {
+      return value
+    })
+    const batchNumberResult = _executeQuery('SELECT IFNULL((SELECT max(batch) FROM migrations),0)  as bathno;')
+    batchNumber = await Promise.all([batchNumberResult]).then(value => {
+      return value[0][0].bathno
+    })
+    batchNumber++
     const caseStr = process.argv[2]
     switch (caseStr) {
       case 'migration:create':

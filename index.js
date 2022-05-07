@@ -74,7 +74,7 @@ class Migrator {
         } else {
           resolve(dbConn)
         }
-        console.log(colors.FgGreen, 'Successfully connected to the database for migrations.\n', colors.Reset)
+        console.log(colors.FgCyan, 'DB connectin is ok.\n', colors.Reset)
       })
     })
   }
