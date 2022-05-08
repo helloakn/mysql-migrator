@@ -8,23 +8,23 @@ module.exports.Table = (_sql, _executeQuery) => {
   }
 
   const tableCreate = async (_tblName, _columns) => {
-    // console.log('tablecreate')
     return new Promise(resolve => {
       const columns = []
       for (const [key, value] of Object.entries(_columns)) {
         columns.push(` ${key} ${value}`)
       }
       const rawQuery = `CREATE TABLE IF NOT EXISTS ${_tblName} ( ${columns.join(',')} )`
-      // console.log('rawQuery',rawQuery)
       const result = _executeQuery(rawQuery)
-      // console.log('result',result)
       resolve(result)
     })
   }
 
   const tableDropTable = async (_tblName) => {
     const columnsString = `DROP TABLE IF EXISTS ${_tblName}`
-    return await _executeQuery(columnsString)
+    return new Promise(resolve => {
+      const result = _executeQuery(columnsString)
+      resolve(result)
+    }) 
   }
 
   const tableAddColumn = () => {

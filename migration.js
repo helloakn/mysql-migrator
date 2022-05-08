@@ -8,7 +8,6 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
   const up = async () => {
     const migrationList = await table.executeRawQuery('SELECT name from migrations')
     const fileList = await _readDir(path.join(_dir, '/migrations/'))
-    // console.log('fileList',fileList)
     let count = 0
     const promiseList = []
     const migrationfileList = []
@@ -35,7 +34,8 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
           const insertStatement = `INSERT INTO migrations VALUES(NULL,'${migrationfileList[index]}',${batchNumber},'created')`
           const insertpl = _executeQuery(insertStatement)
           insertPromiseList.push(insertpl)
-          console.log('\x1b[32m', migrationfileList[index], '\x1b[36m', ' : migrated successfully ', '\x1b[0m')
+          // console.log('\x1b[32m', migrationfileList[index], '\x1b[36m', ' : migrated successfully ', '\x1b[0m')
+          console.log('\x1b[36m', 'Migrated successfully :', '\x1b[32m', migrationfileList[index], '\x1b[0m')
         } else {
           console.log('\x1b[31m', migrationfileList[index], '\x1b[31m', ' : Failed to migrate ', '\x1b[0m')
         }
@@ -48,10 +48,38 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
   }
 
   const rollback = async () => {
-    const migrationFilePath = path.join(_dir, '/migrations/2-1651905393397-hehahahaha.js')
-    const { rollback: migrationDown } = require(migrationFilePath)
-    const xx = await migrationDown(table)
-    return xx
+    const sqlQuerymigrationListByBath = 'SELECT id,name FROM migrations where batch in ( SELECT IFNULL((SELECT max(batch) FROM migrations),0))'
+    const migrationRecords = await _executeQuery(sqlQuerymigrationListByBath)
+    const rollbackPromiseList = []
+    migrationRecords.forEach(migrationrecord => {
+      try {
+        const migrationFilePath = path.join(_dir, '/migrations/', migrationrecord.name)
+        const { rollback: migrationRollBack } = require(migrationFilePath)
+        rollbackPromiseList.push(migrationRollBack(table))
+      } catch (error) {
+        console.log(error)
+        process.exit()
+      }
+    })
+    let promiseResults = await Promise.all(rollbackPromiseList).then(value => {
+      return value
+    })
+
+    const deletePromiseList = []
+    promiseResults.forEach((promiseres, index) => {
+      if (promiseres !== false) {
+        const deleteStatement = `DELETE FROM migrations WHERE id=${migrationRecords[index].id}`
+        deletePromiseList.push(_executeQuery(deleteStatement))
+        console.log('\x1b[36m', 'Rollback successfully :', '\x1b[32m', migrationRecords[index].name, '\x1b[0m')
+      } else {
+        console.log('\x1b[31m', migrationRecords[index].name, '\x1b[31m', ' : Failed to Rollback ', '\x1b[0m')
+      }
+    })
+
+    await Promise.all(deletePromiseList).then(value => {
+      return value
+    })
+    return { type: 'success', message: '\n Migration RollBack is done\n' }
   }
 
   const createFile = async (_filename) => {
@@ -70,7 +98,6 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
       const tmpFile = path.join(__dirname, '/migration.tmp.js')
       fs.copyFile(tmpFile, _filename, (err) => {
         if (err) {
-          // console.log('error', err)
           resolve(err)
         } else {
           resolve('success')
@@ -116,8 +143,7 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
         responseMessage = await up()
         break
       case 'migration:rollback':
-        msg = await rollback()
-        responseMessage = { type: 'success', message: msg }
+        responseMessage = await rollback()
         break
       case 'seeding:create':
       case 'seeding:up':

@@ -1,6 +1,5 @@
 module.exports = {
   up: (tbl) => {
-    // console.log('haha')
     return tbl.create('test', {
       id: 'int NOT NULL PRIMARY KEY AUTO_INCREMENT',
       name: 'varchar(254) NOT NULL',
