@@ -9,6 +9,9 @@ npm migration package for mysql, mariadb
 ## Table Of contents
 - Installation 
 - Setup
+  - FOR ES6
+  - FOR CommonJs
+  - Update package.json
 - Table Migration
 	- create migration 
 	- code sample for table migration file
@@ -69,6 +72,15 @@ const result = await migrator.init()
 Output(result)
 process.exit()
 
+```
+#### Update package.json
+```json
+...
+  "scripts": {
+    ...
+    "migrate": "node migrator.js"
+  },
+...
 ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
