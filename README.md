@@ -74,7 +74,7 @@ process.exit()
 
 ```
 #### Update package.json
-```json
+```
 ...
   "scripts": {
     ...
