@@ -47,8 +47,10 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
     }
   }
 
-  const rollback = async () => {
-    const sqlQuerymigrationListByBath = 'SELECT id,name FROM migrations where batch in ( SELECT IFNULL((SELECT max(batch) FROM migrations),0))'
+  const rollback = async (_type) => {
+    const sqlQuerymigrationListByBath = _type === 'rollback'
+      ? 'SELECT id,name FROM migrations where batch in ( SELECT IFNULL((SELECT max(batch) FROM migrations),0))'
+      : 'SELECT id,name FROM migrations'
     const migrationRecords = await _executeQuery(sqlQuerymigrationListByBath)
     const rollbackPromiseList = []
     migrationRecords.forEach(migrationrecord => {
@@ -61,7 +63,7 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
         process.exit()
       }
     })
-    let promiseResults = await Promise.all(rollbackPromiseList).then(value => {
+    const promiseResults = await Promise.all(rollbackPromiseList).then(value => {
       return value
     })
 
@@ -143,7 +145,10 @@ module.exports.Migration = async (_sqlConnection, _dir, _executeQuery, _readDir)
         responseMessage = await up()
         break
       case 'migration:rollback':
-        responseMessage = await rollback()
+        responseMessage = await rollback('rollback')
+        break
+      case 'migration:reset':
+        responseMessage = await rollback('reset')
         break
       case 'seeding:create':
       case 'seeding:up':

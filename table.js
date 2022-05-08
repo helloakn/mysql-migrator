@@ -24,7 +24,7 @@ module.exports.Table = (_sql, _executeQuery) => {
     return new Promise(resolve => {
       const result = _executeQuery(columnsString)
       resolve(result)
-    }) 
+    })
   }
 
   const tableAddColumn = () => {
