@@ -29,18 +29,27 @@ npm install mysql-migrator
 ### Setup
 create **migrator.js** with the following code.
 ```javascript
-const {mysqlMigrator} = require('mysql-migrator');
+import { Migrator, Output } from './migrator/index.js'
+
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const dbConfig = {
-  host: 'your-database-host',
-  user: 'your-database-user-name',
+  host: 'localhost',
+  user: 'your-user-name',
   port: 3306,
-  password: '******',
-  database: 'your-database-name'
+  password: 'your-password',
+  database: 'your-database'
 }
-const migrationsPath = __dirname+"/databases";
+const migrationsPath = __dirname + '/migrations'
+const migrator = new Migrator(dbConfig, migrationsPath)
+const result = await migrator.init()
+Output(result)
+process.exit()
 
-mysqlMigrator.init(dbConfig,migrationsPath);
 ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
