@@ -89,7 +89,11 @@ process.exit()
 ## Table Migration
 ### create migration file
 ```shell
-node migrator.js migration create create_table_user
+node migrator.js migration:create create_table_user
+```
+or
+```shell
+npm run migrate migration:create create_table_user
 ```
 ### code sample for table migration file
 there are two function **up** and **rollback** functions.
@@ -98,29 +102,34 @@ there are two function **up** and **rollback** functions.
  ```shell
 //write sql statement to create or modify
 module.exports = {
-	"up": `
-	CREATE TABLE IF NOT EXISTS User (
-		id int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-		name varchar(45) NOT NULL,
-		password varchar(200) NOT NULL,
-		created_at datetime NOT NULL,
-		updated_at datetime NOT NULL,
-		deleted_at datetime DEFAULT NULL
-	);
-	`,
-	"rollback":`
-	DROP TABLE IF EXISTS User;
-	`
+  up: async (tbl) => {
+    return await tbl.create('tblUser', {
+      id: 'int NOT NULL PRIMARY KEY AUTO_INCREMENT',
+      name: 'varchar(254) NOT NULL'
+    })
+  },
+  rollback: async (tbl) => {
+    return await tbl.dropTable('tblUser')
+  }
 }
+
 ```
 ### run migration file
 #### up
 ```shell
-node migrator.js migration up
+node migrator.js migration:up
+```
+or
+```shell
+npm run migrate migration:up
 ```
 #### rollback
 ```shell
-node migrator.js migration rollback
+node migrator.js migration:rollback
+```
+or
+```shell
+npm run migrate migration:rollback
 ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -129,7 +138,12 @@ node migrator.js migration rollback
 ## Data Seeding 
 ### create seeding file
 ```shell
-node migrator.js seeding create user_data_seeding
+node migrator.js seeding:create user_data_seeding
+```
+or
+
+```shell
+npm run migrate seeding:create user_data_seeding
 ```
 ### code sample for data seeding file
 there are two function **up** and **rollback** functions.
@@ -138,13 +152,16 @@ there are two function **up** and **rollback** functions.
  ```javascript
 //write sql statement to create or modify
 module.exports = {
-	"up": `
-	INSERT INTO User VALUES(NULL,"AKN","xxxxxx","2/1/22","2/1/22",NULL);
-	`,
-	"rollback":`
-	TRUNCATE TABLE User;
-	`
+  up: async (_query) => {
+    const queryString = 'INSERT INTO tblUser VALUES(1,"hello")'
+    _query(queryString)
+  },
+  rollback: async (_query) => {
+    const queryString = 'TRUNCATE TABLE tblUser'
+    _query(queryString)
+  }
 }
+
 ```
 or
  ```javascript
