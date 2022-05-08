@@ -37,7 +37,6 @@ module.exports.Table = (_sql, _executeQuery) => {
   return {
     create: tableCreate,
     dropTable: tableDropTable,
-    addColumn: tableAddColumn,
     insert: insertData,
     executeRawQuery: tblRawQuery
   }

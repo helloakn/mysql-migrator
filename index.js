@@ -1,7 +1,7 @@
 const fs = require('fs')
 const mysql = require('mysql')
-const { Migration } = require('./migration.js')
-const seeding = require('./seeding.js')
+const { Migration } = require('./migrator.migrations.js')
+const { Seeding } = require('./migrator.seedings.js')
 const colors = {
   Reset: '\x1b[0m',
   Bright: '\x1b[1m',
@@ -74,7 +74,7 @@ class Migrator {
         } else {
           resolve(dbConn)
         }
-        console.log(colors.FgCyan, 'DB connectin is ok.\n', colors.Reset)
+        console.log(colors.FgCyan, '  Successfully Connected to Database', colors.Reset)
       })
     })
   }
@@ -97,14 +97,17 @@ class Migrator {
 
   init = async () => {
     const simpleCommand = `
-    \x1b[31m you are missing something. pls do as the following example \x1b[33m
-    
-      \u2605 npm run migrate migration:create tablename
-      \u2605 npm run migrate migration:up
-      \u2605 npm run migrate migration:rollback
-      \u2605 npm run migrate seeding:create seedingfile
-      \u2605 npm run migrate seeding:up
-      \u2605 npm run migrate seeding:rollback
+  \x1b[31m you are missing something. pls do as the following example \x1b[33m
+
+    \x1b[36m.:: For Table Migration ::.\x1b[33m
+    \u2605 npm run migrate migration:create tablename
+    \u2605 npm run migrate migration:up
+    \u2605 npm run migrate migration:rollback 
+
+    \x1b[36m.:: For Data Seeders ::.\x1b[33m
+    \u2605 npm run migrate seeding:create seedingfile
+    \u2605 npm run migrate seeding:up
+    \u2605 npm run migrate seeding:rollback
     `
     this.dbConnection = await this.connect()
     this.createDirs()
@@ -120,8 +123,7 @@ class Migrator {
         case 'seeding:create':
         case 'seeding:up':
         case 'seeding:rollback':
-          seeding(this.dbConnection)
-          break
+          return await Seeding(this.dbConnection, this.dbPath, this.executeQuery, readDir)
         default:
           // check utf8 code herere -> https://www.w3schools.com/charsets/ref_utf_symbols.asp
           return { type: 'warning', message: simpleCommand }
