@@ -29,7 +29,7 @@ npm install mysql-migrator
 ### Setup
 create **migrator.js** with the following code.
 ```javascript
-import { Migrator, Output } from './migrator/index.js'
+import { Migrator, Output } from 'mysql-migrator'
 
 import path from 'path'
 import { fileURLToPath } from 'url'
