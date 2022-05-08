@@ -27,7 +27,11 @@ module.exports.Table = (_sql, _executeQuery) => {
     })
   }
 
-  const tableAddColumn = () => {
+  const tblRawQuery = async (_rawQuery) => {
+    return new Promise(resolve => {
+      const result = _executeQuery(_rawQuery)
+      resolve(result)
+    })
   }
 
   return {
@@ -35,6 +39,6 @@ module.exports.Table = (_sql, _executeQuery) => {
     dropTable: tableDropTable,
     addColumn: tableAddColumn,
     insert: insertData,
-    executeRawQuery: _executeQuery
+    executeRawQuery: tblRawQuery
   }
 }

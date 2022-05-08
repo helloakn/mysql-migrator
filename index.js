@@ -115,7 +115,7 @@ class Migrator {
         case 'migration:create':
         case 'migration:up':
         case 'migration:rollback':
-        case 'migration:reset':  
+        case 'migration:reset':
           return await Migration(this.dbConnection, this.dbPath, this.executeQuery, readDir)
         case 'seeding:create':
         case 'seeding:up':
