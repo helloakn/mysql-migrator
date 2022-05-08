@@ -154,40 +154,32 @@ there are two function **up** and **rollback** functions.
 module.exports = {
   up: async (_query) => {
     const queryString = 'INSERT INTO tblUser VALUES(1,"hello")'
-    _query(queryString)
+    await _query(queryString)
   },
   rollback: async (_query) => {
     const queryString = 'TRUNCATE TABLE tblUser'
-    _query(queryString)
+    await _query(queryString)
   }
 }
 
-```
-or
- ```javascript
-//write sql statement to create or modify
-module.exports = {
-	"up": async function(_callBack){
-		let query = `INSERT INTO User VALUES(NULL,"AKN","xxxxxx","2/1/22","2/1/22",NULL);`;
-		return await new Promise(async (resolve,reject)=>{
-			resolve( await _callBack(query));
-		}); ;
-	},
-	"rollback":function(){
-		let query = `TRUNCATE TABLE User;`;
-		return query;
-	}
-}
 ```
 
 ### run seeding file
 #### up
 ```shell
-node migrator.js seeding up
+node migrator.js seeding:up
+```
+or
+```shell
+npm run migrate seeding:up
 ```
 #### rollback
 ```shell
-node migrator.js seeding rollback
+node migrator.js seeding:rollback
+```
+or
+```shell
+npm run migrate seeding:rollback
 ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
